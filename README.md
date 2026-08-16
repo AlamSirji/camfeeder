@@ -37,13 +37,13 @@ container. No rebuild, no re-upload.
 There are no environment variables to set — the image is fixed at build
 time to listen on port `200` and read its camera list from `/config/cameras.yml`
 inside the container. The only thing you configure per-deployment is *where
-on the NAS* that `/config` path is backed by, via a normal volume mapping —
-the image declares `/config` as a volume, so Container Manager's container
-setup wizard automatically shows a folder-mapping row for it (the same way
-apps like Kerberos.io ask you to pick a folder for config/recordings) instead
-of you having to add it manually. "config file not found" almost always means
-that mapping is missing, points at the wrong folder, or the file inside it
-isn't actually named `cameras.yml`.
+on the NAS* that `/config` path is backed by: pick any shared folder you like
+(it doesn't need to be named "config") and add it under **Volume Settings**
+when creating the container, mapped to the container path `/config` — the
+same manual step as mapping Kerberos.io's config/recordings folders, just
+one folder instead of two since this app doesn't record anything. "config
+file not found" means that mapping wasn't added, points at the wrong folder,
+or the file inside it isn't actually named `cameras.yml`.
 
 ## Build
 
@@ -54,10 +54,11 @@ docker build -t camfeeder:latest .
 The base image (`alexxit/go2rtc`) declares its own `EXPOSE 1984 8554 8555`;
 Docker's `EXPOSE` metadata is cumulative across layers, so without extra
 steps a plain build would still advertise those on top of port `200`, and
-Container Manager's setup wizard would prompt for all of them. The published
-image is flattened after build to reset that to just `EXPOSE 200` (keeping
-our own intentional `VOLUME /config` so the setup wizard still prompts for
-the config folder):
+Container Manager's setup wizard would prompt for port mappings for all of
+them. The published image is flattened after build to reset that to just
+`EXPOSE 200` (keeping our own intentional `VOLUME ["/config"]` so the image
+still declares that path, even though mapping a folder to it in Container
+Manager is always a manual step regardless):
 
 ```
 docker create --name flatten-tmp camfeeder:latest
@@ -83,13 +84,13 @@ Then open `http://localhost:200`.
 ### Option A: pull from Docker Hub (recommended — fast, no transfer needed)
 
 1. In Container Manager: **Registry** → search `alamsirji/camfeeder` → **Download**. Pick a tag — `latest` or a pinned version like `1.1.0`.
-2. Create a shared folder for config, e.g. `docker/camfeeder/config`, and put
-   your `cameras.yml` in it (copy from `examples/cameras.yml` as a starting
-   point).
-3. Create the container from the `alamsirji/camfeeder` image. Because the
-   image declares `/config` as a volume, the setup wizard will show a
-   folder-mapping row for it automatically — point it at the shared folder
-   from step 2 (you don't need to add it manually in Volume Settings).
+2. Create a shared folder for config — any name/location you like, e.g.
+   `docker/camfeeder/config` — and put your `cameras.yml` in it (copy from
+   `examples/cameras.yml` as a starting point).
+3. Create the container from the `alamsirji/camfeeder` image:
+   - **Volume Settings**: click **Add Folder**, choose the folder from step 2,
+     and set its mount path to `/config` (you have to add this yourself —
+     it's not automatic)
    - **Port mapping**: `200 → 200` (this is the only port needed)
    - **Restart policy**: always restart
 4. Start the container and browse to `http://<nas-ip>:200`.
