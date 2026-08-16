@@ -39,7 +39,7 @@ function makeTile(cam, num) {
   tile.appendChild(wrap);
   tile.appendChild(label);
   tile.addEventListener("click", () => {
-    window.location.href = cam.click_url;
+    window.open(cam.click_url, "_blank", "noopener,noreferrer");
   });
 
   return tile;

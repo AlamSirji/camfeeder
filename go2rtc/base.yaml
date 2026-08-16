@@ -4,5 +4,11 @@ api:
 rtsp:
   listen: "127.0.0.1:8554"
 
+# We only ever consume MJPEG internally; disable the WebRTC listener
+# entirely so go2rtc doesn't open port 8555 or log ICE candidate IPs
+# for a feature this app never uses.
+webrtc:
+  listen: ""
+
 log:
   level: info

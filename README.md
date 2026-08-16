@@ -2,17 +2,21 @@
 
 A single-container dashboard that shows live feeds from all your RTSP cameras
 as one edge-to-edge wall, with a small overlay label on each tile showing its
-site and camera number. Clicking a tile navigates to that camera's own web UI
-(or any URL you configure). Built to run on a Synology NAS via Container
-Manager.
+site and camera number. Clicking a tile opens that camera's own web UI (or
+any URL you configure) in a new tab. Built to run on a Synology NAS via
+Container Manager.
 
 Uses [go2rtc](https://github.com/AlexxIT/go2rtc) internally to pull RTSP and
 re-serve it as MJPEG for the browser. go2rtc is never exposed outside the
 container — the dashboard's Python server proxies each stream internally.
-**Only one port (200) is published.**
+**Only one port (200) is published.** go2rtc's WebRTC module is explicitly
+disabled in `go2rtc/base.yaml` since this app only ever uses MJPEG — without
+that, go2rtc auto-starts a WebRTC listener on port 8555 and logs local/ICE
+candidate IPs (e.g. the Docker bridge gateway, the NAS's LAN IP) that have
+nothing to do with your cameras and would otherwise clutter the logs.
 
 Prebuilt image: [`alamsirji/camfeeder`](https://hub.docker.com/r/alamsirji/camfeeder) on Docker Hub,
-tagged both `latest` and with a version number (e.g. `1.1.0`) — pin a version
+tagged both `latest` and with a version number (e.g. `1.2.0`) — pin a version
 in production if you want upgrades to be a deliberate choice.
 Source: [github.com/AlamSirji/camfeeder](https://github.com/AlamSirji/camfeeder).
 
@@ -26,7 +30,7 @@ for the schema). Each entry has:
 - `site` — shown in the tile's overlay label along with its camera number
 - `rtsp_url` — the camera's RTSP stream (prefer a lower-res substream if
   available, to keep CPU load down with many cameras)
-- `click_url` — where clicking the tile should navigate
+- `click_url` — opened in a new tab when the tile is clicked
 - `enabled` — optional, defaults to `true`
 
 To add a camera later: append an entry to `cameras.yml` and restart the
@@ -83,7 +87,7 @@ Then open `http://localhost:200`.
 
 ### Option A: pull from Docker Hub (recommended — fast, no transfer needed)
 
-1. In Container Manager: **Registry** → search `alamsirji/camfeeder` → **Download**. Pick a tag — `latest` or a pinned version like `1.1.0`.
+1. In Container Manager: **Registry** → search `alamsirji/camfeeder` → **Download**. Pick a tag — `latest` or a pinned version like `1.2.0`.
 2. Create a shared folder for config — any name/location you like, e.g.
    `docker/camfeeder/config` — and put your `cameras.yml` in it (copy from
    `examples/cameras.yml` as a starting point).
@@ -104,7 +108,26 @@ Then open `http://localhost:200`.
 
 ## Troubleshooting
 
-Check the container's logs in Container Manager (or `docker logs`) for:
+On every start, the container tests every enabled camera's RTSP connectivity
+in parallel and logs one line per camera:
+
+```
+[camfeeder] startup test: checking RTSP connectivity for 10 camera(s)...
+[camfeeder] startup test: camera 1031 (Cam 1) - OK
+[camfeeder] startup test: camera 1131 (Cam 3) - FAILED: no data received
+[camfeeder] startup test: done
+```
+
+Check that first before digging further — it tells you immediately which
+cameras are unreachable at boot. After startup, the app only logs a line
+when a camera's status *changes* (comes up or goes down), not on every
+5-second browser retry, so the logs stay readable even with several offline
+cameras. go2rtc's own logs (the lines without the `[camfeeder]` prefix) may
+still show a dial attempt each time a genuinely offline camera is retried —
+that's real network activity, not noise from this app.
+
+Other things to check in the container's logs (Container Manager or
+`docker logs`):
 - `cameras.yml problem: ...` — a config validation error, with the specific
   field/camera that's wrong.
 - `go2rtc exited unexpectedly` — usually an RTSP connectivity issue; the whole
