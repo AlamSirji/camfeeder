@@ -26,7 +26,12 @@ def load_cameras(path):
         with open(path, "r", encoding="utf-8") as f:
             raw = yaml.safe_load(f)
     except FileNotFoundError:
-        raise ConfigError(f"config file not found: {path}")
+        raise ConfigError(
+            f"config file not found: {path}. "
+            "In Container Manager, map a shared folder containing cameras.yml "
+            "to the container path shown above (default /config), or set the "
+            "CAMERAS_CONFIG environment variable to a different path."
+        )
     except yaml.YAMLError as e:
         raise ConfigError(f"invalid YAML/JSON in {path}: {e}")
 

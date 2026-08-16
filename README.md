@@ -11,7 +11,9 @@ re-serve it as MJPEG for the browser. go2rtc is never exposed outside the
 container — the dashboard's Python server proxies each stream internally.
 **Only one port (200) is published.**
 
-Prebuilt image: [`alamsirji/camfeeder`](https://hub.docker.com/r/alamsirji/camfeeder) on Docker Hub.
+Prebuilt image: [`alamsirji/camfeeder`](https://hub.docker.com/r/alamsirji/camfeeder) on Docker Hub,
+tagged both `latest` and with a version number (e.g. `1.0.0`) — pin a version
+in production if you want upgrades to be a deliberate choice.
 Source: [github.com/AlamSirji/camfeeder](https://github.com/AlamSirji/camfeeder).
 
 ## Camera config
@@ -30,10 +32,45 @@ for the schema). Each entry has:
 To add a camera later: append an entry to `cameras.yml` and restart the
 container. No rebuild, no re-upload.
 
+## Configuration (environment variables)
+
+Settable in Container Manager under the container's **Environment** tab:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `CAMERAS_CONFIG` | `/config/cameras.yml` | Path to the camera list, read on container start. |
+| `DASHBOARD_PORT` | `200` | Port the dashboard listens on inside the container. If you change this, also update the port mapping in Container Manager — only `200` is declared as the image's default exposed port. |
+
+`CAMERAS_CONFIG` only changes where the app looks for the file *inside* the
+container — the file still has to exist there, which normally means mapping
+a host shared folder (containing `cameras.yml`) to the container path in
+**Volume Settings**. "config file not found" almost always means that volume
+mapping is missing, not pointed at the right folder, or the file inside it
+isn't actually named `cameras.yml`.
+
 ## Build
 
 ```
 docker build -t camfeeder:latest .
+```
+
+The base image (`alexxit/go2rtc`) declares `EXPOSE 1984 8554 8555` and an
+anonymous `/config` volume of its own; Docker's `EXPOSE`/`VOLUME` metadata is
+cumulative across layers, so without extra steps a plain build would still
+advertise those on top of port `200`, and Container Manager's setup wizard
+would prompt for all of them. The published image is flattened after build
+to reset that metadata to just `EXPOSE 200`:
+
+```
+docker create --name flatten-tmp camfeeder:latest
+docker export flatten-tmp | docker import \
+  --change 'ENV CAMERAS_CONFIG=/config/cameras.yml' \
+  --change 'ENV DASHBOARD_PORT=200' \
+  --change 'WORKDIR /app' \
+  --change 'EXPOSE 200' \
+  --change 'ENTRYPOINT ["/usr/bin/python3","/app/entrypoint.py"]' \
+  - camfeeder:latest
+docker rm -f flatten-tmp
 ```
 
 ## Test locally
@@ -48,7 +85,7 @@ Then open `http://localhost:200`.
 
 ### Option A: pull from Docker Hub (recommended — fast, no transfer needed)
 
-1. In Container Manager: **Registry** → search `alamsirji/camfeeder` → **Download** (pulls `latest` directly on the NAS).
+1. In Container Manager: **Registry** → search `alamsirji/camfeeder` → **Download**. Pick a tag — `latest` or a pinned version like `1.0.0`.
 2. Create a shared folder for config, e.g. `/docker/camfeeder/config`, and put
    your `cameras.yml` in it (copy from `examples/cameras.yml` as a starting
    point).
