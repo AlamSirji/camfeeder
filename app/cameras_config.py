@@ -29,8 +29,7 @@ def load_cameras(path):
         raise ConfigError(
             f"config file not found: {path}. "
             "In Container Manager, map a shared folder containing cameras.yml "
-            "to the container path shown above (default /config), or set the "
-            "CAMERAS_CONFIG environment variable to a different path."
+            "to the container's /config path in Volume Settings."
         )
     except yaml.YAMLError as e:
         raise ConfigError(f"invalid YAML/JSON in {path}: {e}")

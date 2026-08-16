@@ -13,11 +13,13 @@ log = logging.getLogger("entrypoint")
 
 BASE_CONFIG = "/app/go2rtc/base.yaml"
 STREAMS_CONFIG = "/run/go2rtc.streams.yaml"
+CAMERAS_CONFIG = "/config/cameras.yml"
+DASHBOARD_PORT = 200
 
 
 def main():
-    cameras_config = os.environ.get("CAMERAS_CONFIG", "/config/cameras.yml")
-    dashboard_port = int(os.environ.get("DASHBOARD_PORT", "200"))
+    cameras_config = CAMERAS_CONFIG
+    dashboard_port = DASHBOARD_PORT
 
     try:
         cameras = load_cameras(cameras_config)

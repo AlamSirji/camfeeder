@@ -6,9 +6,7 @@ WORKDIR /app
 COPY app/ /app/
 COPY go2rtc/base.yaml /app/go2rtc/base.yaml
 
-ENV CAMERAS_CONFIG=/config/cameras.yml \
-    DASHBOARD_PORT=200
-
 EXPOSE 200
+VOLUME ["/config"]
 
 ENTRYPOINT ["/usr/bin/python3", "/app/entrypoint.py"]
