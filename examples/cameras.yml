@@ -1,0 +1,25 @@
+# Copy this file to your Synology shared folder (e.g. /docker/camfeeder/config/cameras.yml)
+# and bind-mount that FOLDER (not this single file) to /config in the container.
+#
+# Adding a new camera later: append another entry under `cameras:` with a unique `id`,
+# then restart the container. No rebuild, no re-upload needed.
+
+version: 1
+title: "Camera Wall"
+
+cameras:
+  - id: front-gate
+    name: "Front Gate"
+    site: "Main Building"
+    # Prefer the camera's lower-resolution "sub stream" here if it has one
+    # (e.g. Hikvision/Dahua channel 102) to keep CPU load down with many cameras.
+    rtsp_url: "rtsp://user:pass@192.168.1.50:554/Streaming/Channels/102"
+    click_url: "http://192.168.1.50/doc/page/login.asp"
+    enabled: true
+
+  - id: warehouse-dock-1
+    name: "Warehouse Dock 1"
+    site: "Warehouse"
+    rtsp_url: "rtsp://user:pass@192.168.1.60:554/Streaming/Channels/102"
+    click_url: "http://192.168.1.60/"
+    enabled: true
