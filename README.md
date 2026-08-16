@@ -1,14 +1,18 @@
 # camfeeder — Camera Wall Dashboard
 
 A single-container dashboard that shows live feeds from all your RTSP cameras
-in a grid, grouped by site. Clicking a tile navigates to that camera's own
-web UI (or any URL you configure). Built to run on a Synology NAS via
-Container Manager.
+as one edge-to-edge wall, with a small overlay label on each tile showing its
+site and camera number. Clicking a tile navigates to that camera's own web UI
+(or any URL you configure). Built to run on a Synology NAS via Container
+Manager.
 
 Uses [go2rtc](https://github.com/AlexxIT/go2rtc) internally to pull RTSP and
 re-serve it as MJPEG for the browser. go2rtc is never exposed outside the
 container — the dashboard's Python server proxies each stream internally.
 **Only one port (200) is published.**
+
+Prebuilt image: [`alamsirji/camfeeder`](https://hub.docker.com/r/alamsirji/camfeeder) on Docker Hub.
+Source: [github.com/AlamSirji/camfeeder](https://github.com/AlamSirji/camfeeder).
 
 ## Camera config
 
@@ -16,8 +20,8 @@ All cameras are defined in one file, `cameras.yml` (see `examples/cameras.yml`
 for the schema). Each entry has:
 
 - `id` — unique, slug-safe (letters/numbers/`-`/`_`)
-- `name` — display name
-- `site` — grouping label shown as a section heading
+- `name` — display name (shown as the tile's tooltip)
+- `site` — shown in the tile's overlay label along with its camera number
 - `rtsp_url` — the camera's RTSP stream (prefer a lower-res substream if
   available, to keep CPU load down with many cameras)
 - `click_url` — where clicking the tile should navigate
@@ -42,17 +46,24 @@ Then open `http://localhost:200`.
 
 ## Deploy to Synology Container Manager
 
-1. Export the image: `docker save camfeeder:latest -o camfeeder.tar`
-2. Copy `camfeeder.tar` to the NAS (File Station or `scp`).
-3. In Container Manager: **Image → Add → Add From File** → select the tar.
-4. Create a shared folder for config, e.g. `/docker/camfeeder/config`, and put
+### Option A: pull from Docker Hub (recommended — fast, no transfer needed)
+
+1. In Container Manager: **Registry** → search `alamsirji/camfeeder` → **Download** (pulls `latest` directly on the NAS).
+2. Create a shared folder for config, e.g. `/docker/camfeeder/config`, and put
    your `cameras.yml` in it (copy from `examples/cameras.yml` as a starting
    point).
-5. Create the container:
+3. Create the container from the `alamsirji/camfeeder` image:
    - **Port mapping**: `200 → 200` (this is the only port needed)
    - **Volume mapping**: `/docker/camfeeder/config` → `/config`
    - **Restart policy**: always restart
-6. Start the container and browse to `http://<nas-ip>:200`.
+4. Start the container and browse to `http://<nas-ip>:200`.
+
+### Option B: build locally and upload the image file
+
+1. Export the image: `docker save camfeeder:latest -o camfeeder.tar`
+2. Copy `camfeeder.tar` to the NAS (File Station or `scp`).
+3. In Container Manager: **Image → Add → Add From File** → select the tar.
+4. Continue from step 2 in Option A (config folder, port/volume mapping, restart policy).
 
 ## Troubleshooting
 
