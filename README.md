@@ -2,9 +2,13 @@
 
 A single-container dashboard that shows live feeds from all your RTSP cameras
 as one edge-to-edge wall, with a small overlay label on each tile showing its
-site and camera number. Clicking a tile opens that camera's own web UI (or
-any URL you configure) in a new tab. Built to run on a Synology NAS via
-Container Manager.
+site and camera number. Each tile has two small controls: a power icon to
+switch that camera's live feed on/off (useful over constrained links — an
+off feed closes its connection immediately, freeing bandwidth for the other
+tiles, and the choice is remembered per browser), and a link icon to open
+that camera's own web UI (or any URL you configure) in a new tab. Clicking
+the video itself enlarges it in place instead of navigating away. Built to
+run on a Synology NAS via Container Manager.
 
 Uses [go2rtc](https://github.com/AlexxIT/go2rtc) internally to pull RTSP and
 re-serve it as MJPEG for the browser. go2rtc is never exposed outside the
@@ -30,7 +34,7 @@ for the schema). Each entry has:
 - `site` — shown in the tile's overlay label along with its camera number
 - `rtsp_url` — the camera's RTSP stream (prefer a lower-res substream if
   available, to keep CPU load down with many cameras)
-- `click_url` — opened in a new tab when the tile is clicked
+- `click_url` — opened in a new tab via the tile's link icon
 - `enabled` — optional, defaults to `true`
 
 To add a camera later: append an entry to `cameras.yml` and restart the

@@ -34,7 +34,6 @@ main {
   position: relative;
   margin: 0;
   background: #000;
-  cursor: pointer;
   overflow: hidden;
 }
 
@@ -47,6 +46,7 @@ main {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  cursor: pointer;
 }
 
 .tile img {
@@ -56,9 +56,24 @@ main {
   display: block;
 }
 
-.tile .offline {
-  color: var(--muted);
+.tile .placeholder {
   font-size: 0.85rem;
+}
+
+.tile .placeholder.offline {
+  color: #d98a8a;
+}
+
+.tile .placeholder.off {
+  color: var(--muted);
+}
+
+.tile.disabled .video-wrap {
+  opacity: 0.45;
+}
+
+.tile.disabled .label {
+  opacity: 0.6;
 }
 
 .tile .label {
@@ -73,4 +88,98 @@ main {
   border-radius: 3px;
   pointer-events: none;
   white-space: nowrap;
+}
+
+.tile-controls {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 4px;
+  z-index: 1;
+}
+
+.tile-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #d9d9d9;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.tile-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+}
+
+.toggle-btn.active {
+  color: #6fd66f;
+}
+
+.toggle-btn:not(.active) {
+  color: #d97a7a;
+}
+
+/* Lightbox */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.lightbox-box {
+  position: relative;
+  max-width: 94vw;
+  max-height: 94vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-box img {
+  max-width: 94vw;
+  max-height: 94vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: -36px;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.lightbox-caption {
+  position: absolute;
+  left: 0;
+  bottom: -30px;
+  color: var(--muted);
+  font-size: 0.85rem;
 }
